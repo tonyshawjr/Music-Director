@@ -16,6 +16,7 @@ Description: A powerful and easy to use tool for the church Music Director. Song
 Author: Tony Shaw
 Version: 1.0
 Author URI: http://www.yaconiello.com/
+Requires Plugins: advanced-custom-fields
 */
 
 // Music Director
@@ -262,128 +263,157 @@ add_action( 'init', 'music_director_taxes' );
 
 // Custom Fields //
 
-// 1. customize ACF path
-add_filter('acf/settings/path', 'my_acf_settings_path');
- 
-function my_acf_settings_path( $path ) {
- 
-    // update path
-    $path = get_stylesheet_directory() . '%s/acf/';
-    
-    // return
-    return $path;
-    
+/**
+ * Ensure Advanced Custom Fields is available and register local field groups
+ * using the modern API introduced in ACF 5/6.
+ */
+function music_director_register_fields() {
+
+        if ( ! function_exists( 'acf_add_local_field_group' ) ) {
+                return;
+        }
+
+        acf_add_local_field_group( array(
+                'key' => 'group_music_director_song_builder',
+                'title' => 'Music Director: Song Builder',
+                'fields' => array(
+                        array(
+                                'key' => 'field_587e606947d0d',
+                                'label' => 'Highlighted Lyrics',
+                                'name' => 'highlighted_lyrics',
+                                'type' => 'textarea',
+                                'instructions' => '',
+                                'required' => 1,
+                                'default_value' => '',
+                                'placeholder' => '',
+                                'maxlength' => '',
+                                'rows' => 4,
+                                'new_lines' => 'br',
+                                'wrapper' => array(
+                                        'width' => '',
+                                        'class' => '',
+                                        'id' => '',
+                                ),
+                        ),
+                        array(
+                                'key' => 'field_587e5f45967c2',
+                                'label' => 'Lead Sheet',
+                                'name' => 'lead_sheet',
+                                'type' => 'text',
+                                'instructions' => '',
+                                'required' => 0,
+                                'default_value' => '',
+                                'placeholder' => '',
+                                'prepend' => '',
+                                'append' => '',
+                                'maxlength' => '',
+                                'wrapper' => array(
+                                        'width' => '',
+                                        'class' => '',
+                                        'id' => '',
+                                ),
+                        ),
+                        array(
+                                'key' => 'field_587e5fb9967c3',
+                                'label' => 'Chord Sheet',
+                                'name' => 'chord_sheet',
+                                'type' => 'text',
+                                'instructions' => '',
+                                'required' => 0,
+                                'default_value' => '',
+                                'placeholder' => '',
+                                'prepend' => '',
+                                'append' => '',
+                                'maxlength' => '',
+                                'wrapper' => array(
+                                        'width' => '',
+                                        'class' => '',
+                                        'id' => '',
+                                ),
+                        ),
+                        array(
+                                'key' => 'field_587e6005967c4',
+                                'label' => 'Youtube Link',
+                                'name' => 'youtube_link',
+                                'type' => 'text',
+                                'instructions' => '',
+                                'required' => 0,
+                                'default_value' => '',
+                                'placeholder' => '',
+                                'prepend' => '',
+                                'append' => '',
+                                'maxlength' => '',
+                                'wrapper' => array(
+                                        'width' => '',
+                                        'class' => '',
+                                        'id' => '',
+                                ),
+                        ),
+                        array(
+                                'key' => 'field_587e6027967c5',
+                                'label' => 'Spotify Link',
+                                'name' => 'spotify_link',
+                                'type' => 'text',
+                                'instructions' => '',
+                                'required' => 0,
+                                'default_value' => '',
+                                'placeholder' => '',
+                                'prepend' => '',
+                                'append' => '',
+                                'maxlength' => '',
+                                'wrapper' => array(
+                                        'width' => '',
+                                        'class' => '',
+                                        'id' => '',
+                                ),
+                        ),
+                ),
+                'location' => array(
+                        array(
+                                array(
+                                        'param' => 'post_type',
+                                        'operator' => '==',
+                                        'value' => 'songs',
+                                ),
+                        ),
+                ),
+                'menu_order' => 0,
+                'position' => 'normal',
+                'style' => 'default',
+                'label_placement' => 'top',
+                'instruction_placement' => 'label',
+                'hide_on_screen' => array(),
+                'active' => true,
+                'description' => '',
+        ) );
 }
- 
+add_action( 'acf/init', 'music_director_register_fields' );
 
-// 2. customize ACF dir
-add_filter('acf/settings/dir', 'my_acf_settings_dir');
- 
-function my_acf_settings_dir( $dir ) {
- 
-    // update path
-    $dir = get_stylesheet_directory_uri() . '%s/acf/';
-    
-    // return
-    return $dir;
-    
+/**
+ * Surface an admin notice when the Advanced Custom Fields dependency
+ * is missing so site owners can install the official plugin.
+ */
+function music_director_acf_admin_notice() {
+
+        if ( class_exists( 'ACF' ) || function_exists( 'acf' ) ) {
+                return;
+        }
+
+        if ( ! current_user_can( 'activate_plugins' ) ) {
+                return;
+        }
+
+        printf(
+                '<div class="notice notice-error"><p>%s</p></div>',
+                wp_kses_post(
+                        __(
+                                'Music Director now relies on the Advanced Custom Fields plugin. Please install and activate Advanced Custom Fields 6.x or later to continue managing song metadata.',
+                                'music-director'
+                        )
+                )
+        );
 }
- 
-
-// 3. Hide ACF field group menu item
-add_filter('acf/settings/show_admin', '__return_false');
-
-
-// 4. Include ACF
-include_once( get_stylesheet_directory() . '%s/acf/acf.php' );
-
-if(function_exists("register_field_group"))
-{
-	register_field_group(array (
-		'id' => 'acf_music-director-song-builder',
-		'title' => 'Music Director: Song Builder',
-		'fields' => array (
-			array (
-				'key' => 'field_587e606947d0d',
-				'label' => 'Highlighted Lyrics',
-				'name' => 'highlighted_lyrics',
-				'type' => 'textarea',
-				'required' => 1,
-				'default_value' => '',
-				'placeholder' => '',
-				'maxlength' => '',
-				'rows' => 4,
-				'formatting' => 'br',
-			),
-			array (
-				'key' => 'field_587e5f45967c2',
-				'label' => 'Lead Sheet',
-				'name' => 'lead_sheet',
-				'type' => 'text',
-				'default_value' => '',
-				'placeholder' => '',
-				'prepend' => '',
-				'append' => '',
-				'formatting' => 'html',
-				'maxlength' => '',
-			),
-			array (
-				'key' => 'field_587e5fb9967c3',
-				'label' => 'Chord Sheet',
-				'name' => 'chord_sheet',
-				'type' => 'text',
-				'default_value' => '',
-				'placeholder' => '',
-				'prepend' => '',
-				'append' => '',
-				'formatting' => 'html',
-				'maxlength' => '',
-			),
-			array (
-				'key' => 'field_587e6005967c4',
-				'label' => 'Youtube Link',
-				'name' => 'youtube_link',
-				'type' => 'text',
-				'default_value' => '',
-				'placeholder' => '',
-				'prepend' => '',
-				'append' => '',
-				'formatting' => 'html',
-				'maxlength' => '',
-			),
-			array (
-				'key' => 'field_587e6027967c5',
-				'label' => 'Spotify Link',
-				'name' => 'spotify_link',
-				'type' => 'text',
-				'default_value' => '',
-				'placeholder' => '',
-				'prepend' => '',
-				'append' => '',
-				'formatting' => 'html',
-				'maxlength' => '',
-			),
-		),
-		'location' => array (
-			array (
-				array (
-					'param' => 'post_type',
-					'operator' => '==',
-					'value' => 'songs',
-					'order_no' => 0,
-					'group_no' => 0,
-				),
-			),
-		),
-		'options' => array (
-			'position' => 'normal',
-			'layout' => 'default',
-			'hide_on_screen' => array (
-			),
-		),
-		'menu_order' => 0,
-	));
-}
+add_action( 'admin_notices', 'music_director_acf_admin_notice' );
 
 
 ?>
