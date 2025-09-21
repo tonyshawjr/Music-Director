@@ -26,29 +26,31 @@
 	<div class="container main-content">
 		<div class="row">
 			<div class="col span_12">
-				<?php $args = array(
-					'post_type' => 'songs',
-					'tax_query' => array(
-						array(
-							'taxonomy' => 'key',
-							'field'    => 'slug',
-							'terms'    => 'slug',
-						),
-					'orderby' => 'title',
-                    'order' => 'ASC',
-					),
-				);
-				$query = new WP_Query( $args );
-				?>
-				
-				<?php print_r( $args ) ?>
-					
-					<?php if(have_posts()) : while(have_posts()) : the_post(); ?>
-	
-				<div class="col song-card">
-					<div class="song-card-top">
-					<h4><a href="<?php the_permalink(); ?>"><strong><?php the_title(); ?></strong></a></h4>
-					</div>
+                                <?php
+                                $term_slug = get_query_var( 'term' );
+
+                                $args = array(
+                                        'post_type' => 'songs',
+                                        'tax_query' => array(
+                                                array(
+                                                        'taxonomy' => 'key',
+                                                        'field'    => 'slug',
+                                                        'terms'    => $term_slug,
+                                                ),
+                                        ),
+                                        'orderby' => 'title',
+                                        'order'   => 'ASC',
+                                );
+                                $query = new WP_Query( $args );
+                                ?>
+
+                                        <?php if ( $query->have_posts() ) : ?>
+                                                <?php while ( $query->have_posts() ) : $query->the_post(); ?>
+
+                                <div class="col song-card">
+                                        <div class="song-card-top">
+                                        <h4><a href="<?php the_permalink(); ?>"><strong><?php the_title(); ?></strong></a></h4>
+                                        </div>
 					<div class="song-card-middle">
 						<div class="song-details">
 							
@@ -58,9 +60,12 @@
 						<small><p><strong>Excerpt:</strong> <?php the_field('highlighted_lyrics'); ?></p></small>
 					</div>
 				</div>
-					
-				<?php endwhile; ?><?php endif; ?>
-			<?php wp_reset_query(); ?>
+
+                                <?php endwhile; ?>
+                        <?php else : ?>
+                                <p><?php esc_html_e( 'No songs found for this key.', 'music-director' ); ?></p>
+                        <?php endif; ?>
+                        <?php wp_reset_postdata(); ?>
 			</div>
 		</div>
 	</div>
