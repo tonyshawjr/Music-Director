@@ -31,70 +31,56 @@
 				<div class="col span_2"><strong>Key:</strong></div>
 				<div class="col span_6"><strong>Theme:</strong></div>
 			</div>
-			<?php
-             global $post;
-             $cargs = array(
-                 'child_of'      => 0,
-                 'orderby'       => 'name',
-                 'order'         => 'ASC',
-                 'hide_empty'    => 1,
-                 'taxonomy'      => 'themes', //change this to any taxonomy
-             );
-             foreach (get_categories($cargs) as $tax) :
-                 // List posts by the terms for a custom taxonomy of any post type
-                 $args = array(
-                     'post_type'         => 'songs',
-                     'post_status'       => 'publish',
-                     'posts_per_page'    => -1,
-                     'orderby'           => 'title',
-                     'order'             => 'ASC',
-                     'meta_key'          => '',
-                     'meta_value'        => '',
-                     'tax_query' => array(
-                         array(
-                             'taxonomy'  => 'themes',
-                             'field'     => 'slug',
-                             'terms'     => $tax->slug
-                         )
-                     )
-                 );
-                 if (get_posts($args)) :
-             ?>
-			 
-			 <?php foreach(get_posts($args) as $p) : ?>
-			<div class="col span_12">
-				<div class="col span_4"><a href="<?php the_permalink(); ?>"><strong><?php echo $p->post_title; ?></strong></a></div>
-				<div class="col span_2">
-					<?php $terms = get_the_terms( $post->ID , 'key' ); 
-					    foreach ( $terms as $term ) {
-					        $term_link = get_term_link( $term, 'key' );
-					        if( is_wp_error( $term_link ) )
-					        continue;
-					    echo '<a href="' . $term_link . '">' . $term->name . '</a>' . ', ';
-					    } 
-					    $output = ob_get_clean(); echo rtrim($output, ', ');
-					?>
-				</div>
-				<div class="col span_6">
-					<?php $terms = get_the_terms( $post->ID , 'themes' ); 
-					    foreach ( $terms as $term ) {
-					        $term_link = get_term_link( $term, 'themes' );
-					        if( is_wp_error( $term_link ) )
-					        continue;
-					    echo '<a href="' . $term_link . '">' . $term->name . '</a>' . ', ';
-					    } 
-					    $output = ob_get_clean(); echo rtrim($output, ', ');
-					?>
-				</div>
-			</div>
-				
-			
-			<?php endforeach; ?>
-			
-			<?php
-	            endif;
-	            endforeach;
-	         ?>
+                        <?php
+                        $theme_terms = get_terms(
+                                array(
+                                        'taxonomy'   => 'themes',
+                                        'orderby'    => 'name',
+                                        'order'      => 'ASC',
+                                        'hide_empty' => true,
+                                )
+                        );
+
+                        if ( ! is_wp_error( $theme_terms ) && ! empty( $theme_terms ) ) :
+                                foreach ( $theme_terms as $theme_term ) :
+                                        $songs_query = new WP_Query(
+                                                array(
+                                                        'post_type'      => 'songs',
+                                                        'post_status'    => 'publish',
+                                                        'posts_per_page' => -1,
+                                                        'orderby'        => 'title',
+                                                        'order'          => 'ASC',
+                                                        'tax_query'      => array(
+                                                                array(
+                                                                        'taxonomy' => 'themes',
+                                                                        'field'    => 'term_id',
+                                                                        'terms'    => $theme_term->term_id,
+                                                                ),
+                                                        ),
+                                                )
+                                        );
+
+                                        if ( $songs_query->have_posts() ) :
+                                                while ( $songs_query->have_posts() ) :
+                                                        $songs_query->the_post();
+                                                        $song_id = get_the_ID();
+                                                        ?>
+                        <div class="col span_12">
+                                <div class="col span_4"><a href="<?php echo esc_url( get_permalink( $song_id ) ); ?>"><strong><?php echo esc_html( get_the_title( $song_id ) ); ?></strong></a></div>
+                                <div class="col span_2">
+                                        <?php echo wp_kses_post( music_director_get_formatted_term_links( $song_id, 'key' ) ); ?>
+                                </div>
+                                <div class="col span_6">
+                                        <?php echo wp_kses_post( music_director_get_formatted_term_links( $song_id, 'themes' ) ); ?>
+                                </div>
+                        </div>
+                                                        <?php
+                                                endwhile;
+                                                wp_reset_postdata();
+                                        endif;
+                                endforeach;
+                        endif;
+                        ?>
 			
 		</div>
 		<div class="col span_4 song-side-bar">

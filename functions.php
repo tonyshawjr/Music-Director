@@ -386,4 +386,53 @@ if(function_exists("register_field_group"))
 }
 
 
+if ( ! function_exists( 'music_director_get_formatted_term_links' ) ) {
+
+        /**
+         * Build a comma separated list of term links for the supplied post/taxonomy.
+         *
+         * @param int|WP_Post $post      Post object or ID the terms belong to.
+         * @param string      $taxonomy  Taxonomy slug used to fetch terms.
+         * @param string      $separator Glue used between links.
+         *
+         * @return string
+         */
+        function music_director_get_formatted_term_links( $post, $taxonomy, $separator = ', ' ) {
+                $post = get_post( $post );
+
+                if ( ! $post || empty( $taxonomy ) ) {
+                        return '';
+                }
+
+                $terms = get_the_terms( $post->ID, $taxonomy );
+
+                if ( empty( $terms ) || is_wp_error( $terms ) ) {
+                        return '';
+                }
+
+                $links = array();
+
+                foreach ( $terms as $term ) {
+                        $term_link = get_term_link( $term, $taxonomy );
+
+                        if ( is_wp_error( $term_link ) ) {
+                                continue;
+                        }
+
+                        $links[] = sprintf(
+                                '<a href="%s">%s</a>',
+                                esc_url( $term_link ),
+                                esc_html( $term->name )
+                        );
+                }
+
+                if ( empty( $links ) ) {
+                        return '';
+                }
+
+                return implode( $separator, $links );
+        }
+}
+
+
 ?>
