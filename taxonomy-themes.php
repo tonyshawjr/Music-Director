@@ -62,29 +62,56 @@
              ?>
 			 
 			 <?php foreach(get_posts($args) as $p) : ?>
+			<?php
+			$song_id      = $p->ID;
+			$key_output   = esc_html__( 'N/A', 'music-director' );
+			$theme_output = esc_html__( 'N/A', 'music-director' );
+
+			$key_terms = get_the_terms( $song_id, 'key' );
+			if ( ! empty( $key_terms ) && ! is_wp_error( $key_terms ) ) {
+				$key_names = wp_list_pluck( $key_terms, 'name', 'term_id' );
+				$key_links = array();
+
+				foreach ( $key_terms as $key_term ) {
+					$key_name = isset( $key_names[ $key_term->term_id ] ) ? $key_names[ $key_term->term_id ] : $key_term->name;
+					$key_link = get_term_link( $key_term, 'key' );
+
+					if ( ! is_wp_error( $key_link ) ) {
+						$key_links[] = '<a href="' . esc_url( $key_link ) . '">' . esc_html( $key_name ) . '</a>';
+					} else {
+						$key_links[] = esc_html( $key_name );
+					}
+				}
+
+				$key_output = implode( ', ', $key_links );
+			}
+
+			$theme_terms = get_the_terms( $song_id, 'themes' );
+			if ( ! empty( $theme_terms ) && ! is_wp_error( $theme_terms ) ) {
+				$theme_names = wp_list_pluck( $theme_terms, 'name', 'term_id' );
+				$theme_links = array();
+
+				foreach ( $theme_terms as $theme_term ) {
+					$theme_name = isset( $theme_names[ $theme_term->term_id ] ) ? $theme_names[ $theme_term->term_id ] : $theme_term->name;
+					$theme_link = get_term_link( $theme_term, 'themes' );
+
+					if ( ! is_wp_error( $theme_link ) ) {
+						$theme_links[] = '<a href="' . esc_url( $theme_link ) . '">' . esc_html( $theme_name ) . '</a>';
+					} else {
+						$theme_links[] = esc_html( $theme_name );
+					}
+				}
+
+				$theme_output = implode( ', ', $theme_links );
+			}
+			?>
 			<div class="col span_12">
-				<div class="col span_4"><a href="<?php the_permalink(); ?>"><strong><?php echo $p->post_title; ?></strong></a></div>
+				<div class="col span_4"><a href="<?php echo esc_url( get_permalink( $p ) ); ?>"><strong><?php echo esc_html( $p->post_title ); ?></strong></a></div>
 				<div class="col span_2">
-					<?php $terms = get_the_terms( $post->ID , 'key' ); 
-					    foreach ( $terms as $term ) {
-					        $term_link = get_term_link( $term, 'key' );
-					        if( is_wp_error( $term_link ) )
-					        continue;
-					    echo '<a href="' . $term_link . '">' . $term->name . '</a>' . ', ';
-					    } 
-					    $output = ob_get_clean(); echo rtrim($output, ', ');
-					?>
+					<?php echo $key_output; ?>
 				</div>
 				<div class="col span_6">
-					<?php $terms = get_the_terms( $post->ID , 'themes' ); 
-					    foreach ( $terms as $term ) {
-					        $term_link = get_term_link( $term, 'themes' );
-					        if( is_wp_error( $term_link ) )
-					        continue;
-					    echo '<a href="' . $term_link . '">' . $term->name . '</a>' . ', ';
-					    } 
-					    $output = ob_get_clean(); echo rtrim($output, ', ');
-					?>
+					<?php echo $theme_output; ?>
 				</div>
 			</div>
 				
