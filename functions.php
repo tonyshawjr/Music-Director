@@ -55,27 +55,79 @@ function music_director_songs() {
 		"parent_item_colon" => __( 'Songs', '' ),
 	);
 
-	$args = array(
-		"label" => __( 'Songs', '' ),
-		"labels" => $labels,
-		"description" => "Official Praise Team Songlist",
-		"public" => true,
-		"publicly_queryable" => true,
-		"show_ui" => true,
-		"show_in_rest" => false,
-		"rest_base" => "",
-		"has_archive" => true,
-		"show_in_menu" => true,
-		"exclude_from_search" => true,
-		"capability_type" => "post",
-		"map_meta_cap" => true,
-		"hierarchical" => false,
-		"rewrite" => array( "slug" => "music-director/songs", "with_front" => true ),
-		"query_var" => true,
-		"menu_icon" => "dashicons-playlist-audio",
-		"supports" => array( "title", "editor", "thumbnail", "revisions" ),
-		"taxonomies" => array( "key" ),
-	);
+        $args = array(
+                "label" => __( 'Songs', '' ),
+                "labels" => $labels,
+                "description" => "Official Praise Team Songlist",
+                "public" => true,
+                "publicly_queryable" => true,
+                "show_ui" => true,
+                "show_in_rest" => true,
+                "rest_base" => "music-director-songs",
+                "has_archive" => true,
+                "show_in_menu" => true,
+                "exclude_from_search" => true,
+                "capability_type" => "post",
+                "map_meta_cap" => true,
+                "hierarchical" => false,
+                "rewrite" => array( "slug" => "music-director/songs", "with_front" => true ),
+                "query_var" => true,
+                "menu_icon" => "dashicons-playlist-audio",
+                "supports" => array( "title", "editor", "thumbnail", "revisions" ),
+                "taxonomies" => array( "key" ),
+                "template" => array(
+                        array(
+                                'core/heading',
+                                array(
+                                        'level' => 3,
+                                        'content' => __( 'Song Overview', 'music-director' ),
+                                )
+                        ),
+                        array(
+                                'core/paragraph',
+                                array(
+                                        'placeholder' => __( 'Capture rehearsal notes, service flow details, or vocal assignments.', 'music-director' ),
+                                )
+                        ),
+                        array(
+                                'core/separator',
+                                array(),
+                        ),
+                        array(
+                                'core/heading',
+                                array(
+                                        'level' => 4,
+                                        'content' => __( 'Highlighted Lyrics', 'music-director' ),
+                                )
+                        ),
+                        array(
+                                'core/quote',
+                                array(),
+                                array(
+                                        array(
+                                                'core/paragraph',
+                                                array(
+                                                        'placeholder' => __( 'Paste a key lyric excerpt that the team should focus on.', 'music-director' ),
+                                                )
+                                        ),
+                                )
+                        ),
+                        array(
+                                'core/heading',
+                                array(
+                                        'level' => 4,
+                                        'content' => __( 'Resources', 'music-director' ),
+                                )
+                        ),
+                        array(
+                                'core/list',
+                                array(
+                                        'placeholder' => __( 'List lead sheets, chord charts, and reference recordings.', 'music-director' ),
+                                )
+                        ),
+                ),
+                "template_lock" => "insert",
+        );
 
 	register_post_type( "songs", $args );
 }
@@ -123,8 +175,8 @@ function music_director_taxes() {
 		"query_var" => true,
 		"rewrite" => array( 'slug' => 'music-director/song-finder/key', 'with_front' => true, ),
 		"show_admin_column" => true,
-		"show_in_rest" => false,
-		"rest_base" => "",
+                "show_in_rest" => true,
+                "rest_base" => "music-director-keys",
 		"show_in_quick_edit" => true,
 	);
 	register_taxonomy( "key", array( "songs" ), $args );
@@ -166,8 +218,8 @@ function music_director_taxes() {
 		"query_var" => true,
 		"rewrite" => array( 'slug' => 'music-director/song-finder/tempo', 'with_front' => true, ),
 		"show_admin_column" => true,
-		"show_in_rest" => false,
-		"rest_base" => "",
+                "show_in_rest" => true,
+                "rest_base" => "music-director-tempos",
 		"show_in_quick_edit" => true,
 	);
 	register_taxonomy( "tempo", array( "songs" ), $args );
@@ -209,8 +261,8 @@ function music_director_taxes() {
 		"query_var" => true,
 		"rewrite" => array( 'slug' => 'music-director/song-finder/themes', 'with_front' => true, ),
 		"show_admin_column" => true,
-		"show_in_rest" => false,
-		"rest_base" => "",
+                "show_in_rest" => true,
+                "rest_base" => "music-director-themes",
 		"show_in_quick_edit" => true,
 	);
 	register_taxonomy( "themes", array( "songs" ), $args );
@@ -251,14 +303,206 @@ function music_director_taxes() {
 		"query_var" => true,
 		"rewrite" => array( 'slug' => 'music-director/song-finder/performer', 'with_front' => true, ),
 		"show_admin_column" => true,
-		"show_in_rest" => false,
-		"rest_base" => "",
+                "show_in_rest" => true,
+                "rest_base" => "music-director-performers",
 		"show_in_quick_edit" => true,
 	);
 	register_taxonomy( "performer", array( "songs" ), $args );
 }
 
 add_action( 'init', 'music_director_taxes' );
+
+function music_director_sanitize_highlighted_lyrics( $value ) {
+
+        return wp_kses_post( $value );
+}
+
+function music_director_register_song_meta() {
+
+        $meta_fields = array(
+                'highlighted_lyrics' => array(
+                        'type' => 'string',
+                        'single' => true,
+                        'sanitize_callback' => 'music_director_sanitize_highlighted_lyrics',
+                        'show_in_rest' => array(
+                                'schema' => array(
+                                        'type' => 'string',
+                                        'context' => array( 'view', 'edit' ),
+                                ),
+                        ),
+                ),
+                'lead_sheet' => array(
+                        'type' => 'string',
+                        'single' => true,
+                        'sanitize_callback' => 'esc_url_raw',
+                        'show_in_rest' => array(
+                                'schema' => array(
+                                        'type' => 'string',
+                                        'format' => 'uri',
+                                        'context' => array( 'view', 'edit' ),
+                                ),
+                        ),
+                ),
+                'chord_sheet' => array(
+                        'type' => 'string',
+                        'single' => true,
+                        'sanitize_callback' => 'esc_url_raw',
+                        'show_in_rest' => array(
+                                'schema' => array(
+                                        'type' => 'string',
+                                        'format' => 'uri',
+                                        'context' => array( 'view', 'edit' ),
+                                ),
+                        ),
+                ),
+                'youtube_link' => array(
+                        'type' => 'string',
+                        'single' => true,
+                        'sanitize_callback' => 'esc_url_raw',
+                        'show_in_rest' => array(
+                                'schema' => array(
+                                        'type' => 'string',
+                                        'format' => 'uri',
+                                        'context' => array( 'view', 'edit' ),
+                                ),
+                        ),
+                ),
+                'spotify_link' => array(
+                        'type' => 'string',
+                        'single' => true,
+                        'sanitize_callback' => 'esc_url_raw',
+                        'show_in_rest' => array(
+                                'schema' => array(
+                                        'type' => 'string',
+                                        'format' => 'uri',
+                                        'context' => array( 'view', 'edit' ),
+                                ),
+                        ),
+                ),
+        );
+
+        foreach ( $meta_fields as $meta_key => $args ) {
+                register_post_meta( 'songs', $meta_key, $args );
+        }
+}
+
+add_action( 'init', 'music_director_register_song_meta', 11 );
+
+function music_director_prepare_terms_for_rest( $post_id, $taxonomy ) {
+
+        $terms = get_the_terms( $post_id, $taxonomy );
+
+        if ( empty( $terms ) || is_wp_error( $terms ) ) {
+                return array();
+        }
+
+        return array_values( array_map( function( $term ) {
+                return array(
+                        'id' => (int) $term->term_id,
+                        'name' => $term->name,
+                        'slug' => $term->slug,
+                );
+        }, $terms ) );
+}
+
+function music_director_prepare_song_for_rest( $object ) {
+
+        if ( empty( $object['id'] ) ) {
+                return array();
+        }
+
+        $post_id = (int) $object['id'];
+
+        $highlighted_lyrics = get_post_meta( $post_id, 'highlighted_lyrics', true );
+        $lead_sheet = get_post_meta( $post_id, 'lead_sheet', true );
+        $chord_sheet = get_post_meta( $post_id, 'chord_sheet', true );
+        $youtube_link = get_post_meta( $post_id, 'youtube_link', true );
+        $spotify_link = get_post_meta( $post_id, 'spotify_link', true );
+
+        return array(
+                'highlighted_lyrics' => wp_kses_post( $highlighted_lyrics ),
+                'resources' => array(
+                        'lead_sheet' => $lead_sheet ? esc_url( $lead_sheet ) : '',
+                        'chord_sheet' => $chord_sheet ? esc_url( $chord_sheet ) : '',
+                        'youtube_link' => $youtube_link ? esc_url( $youtube_link ) : '',
+                        'spotify_link' => $spotify_link ? esc_url( $spotify_link ) : '',
+                ),
+                'taxonomies' => array(
+                        'keys' => music_director_prepare_terms_for_rest( $post_id, 'key' ),
+                        'tempos' => music_director_prepare_terms_for_rest( $post_id, 'tempo' ),
+                        'themes' => music_director_prepare_terms_for_rest( $post_id, 'themes' ),
+                        'performers' => music_director_prepare_terms_for_rest( $post_id, 'performer' ),
+                ),
+        );
+}
+
+function music_director_register_song_rest_fields() {
+
+        register_rest_field(
+                'songs',
+                'music_director',
+                array(
+                        'get_callback' => 'music_director_prepare_song_for_rest',
+                        'schema' => array(
+                                'description' => __( 'Additional metadata for Music Director songs.', 'music-director' ),
+                                'type' => 'object',
+                                'context' => array( 'view', 'edit' ),
+                        ),
+                )
+        );
+}
+
+add_action( 'rest_api_init', 'music_director_register_song_rest_fields' );
+
+function music_director_register_song_editor_support() {
+
+        if ( function_exists( 'register_block_pattern_category' ) ) {
+                register_block_pattern_category(
+                        'music-director',
+                        array(
+                                'label' => __( 'Music Director', 'music-director' ),
+                        )
+                );
+        }
+
+        if ( function_exists( 'register_block_pattern' ) ) {
+                register_block_pattern(
+                        'music-director/song-resources',
+                        array(
+                                'title' => __( 'Song Resources Summary', 'music-director' ),
+                                'description' => __( 'Starter layout for rehearsal notes, resource links, and highlighted lyrics.', 'music-director' ),
+                                'categories' => array( 'music-director' ),
+                                'content' => <<<'HTML'
+<!-- wp:heading {"level":3} -->
+<h3>Song Overview</h3>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>Add rehearsal notes, vocal assignments, or service flow reminders.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading {"level":4} -->
+<h4>Resources</h4>
+<!-- /wp:heading -->
+
+<!-- wp:list -->
+<ul><li>Lead Sheet: <a href="">Link to PDF</a></li><li>Chord Chart: <a href="">Link to PDF</a></li><li>Reference Recording: <a href="">YouTube or Spotify link</a></li></ul>
+<!-- /wp:list -->
+
+<!-- wp:heading {"level":4} -->
+<h4>Highlighted Lyrics</h4>
+<!-- /wp:heading -->
+
+<!-- wp:quote -->
+<blockquote class="wp-block-quote"><p>Paste the key lyric section that you want to emphasize.</p></blockquote>
+<!-- /wp:quote -->
+HTML
+                        )
+                );
+        }
+}
+
+add_action( 'init', 'music_director_register_song_editor_support', 12 );
 
 // Custom Fields //
 
